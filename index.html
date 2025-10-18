@@ -146,18 +146,45 @@
                 return;
             }
             
-            // If we don't have tokens but we're here from Supabase verification,
-            // it means the email was verified but tokens weren't included.
-            // This happens when coming from /auth/v1/verify redirect.
-            // In this case, we just open the app and let it check for an existing session.
-            console.log('⚠️ No tokens in URL - this means Supabase verified the email');
-            console.log('⚠️ Opening app to check for existing session...');
+            // If we don't have tokens in the URL, Supabase verification happened server-side
+            // We need to pass the VERIFICATION TOKEN from the URL to the app
+            // so the app can exchange it for a session
+            console.log('⚠️ No access_token/refresh_token in URL');
+            console.log('⚠️ Checking for verification token or token_hash...');
             
-            // Just open the app with a simple deep link
-            // The app's AppState listener will detect the session
+            const tokenHash = params.token_hash;
+            const token = params.token;
+            const type = params.type;
+            
+            if (tokenHash || token) {
+                console.log('✅ Found verification token! Passing to app...');
+                
+                // Build deep link with the verification token
+                const verificationToken = tokenHash || token;
+                const deepLinkWithToken = `yachtieassist://auth/callback?token_hash=${encodeURIComponent(verificationToken)}&type=${type || 'signup'}`;
+                
+                console.log('🚀 Opening app with verification token...');
+                
+                document.getElementById('message').textContent = 'Opening YachtieAssist...';
+                document.getElementById('message').classList.add('success');
+                
+                window.location.href = deepLinkWithToken;
+                
+                // Show fallback message after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('spinner').style.display = 'none';
+                    document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + deepLinkWithToken + '">tap here to open YachtieAssist</a>';
+                }, 3000);
+                
+                return;
+            }
+            
+            // Last resort: just open the app and hope it can fetch the session
+            console.log('⚠️ No tokens found at all - opening app anyway...');
+            
             const simpleDeepLink = 'yachtieassist://auth/callback';
             
-            console.log('🚀 Opening app without tokens (app will check session)...');
+            console.log('🚀 Opening app without tokens (app will try to fetch session)...');
             
             document.getElementById('message').textContent = 'Opening YachtieAssist...';
             document.getElementById('message').classList.add('success');
