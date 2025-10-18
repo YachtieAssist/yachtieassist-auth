@@ -69,6 +69,10 @@
         <div class="spinner" id="spinner" style="display: none;"></div>
         <a id="openAppButton" href="#" style="margin-top: 30px; padding: 15px 40px; background: #FFD700; color: #1a1a2e; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px;">Open YachtieAssist</a>
         <p id="error" class="error" style="display: none;"></p>
+        <div id="debug" style="margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px; color: #ccc;">
+            <strong>Debug Info:</strong><br>
+            <span id="debugUrl">Loading...</span>
+        </div>
     </div>
 
     <script>
@@ -274,14 +278,50 @@
             
             console.log('🔗 Deep link:', deepLink);
             
-            // Set the button URL
+            // Show debug info
+            document.getElementById('debugUrl').textContent = deepLink;
+            
+            // Set the button URL and click handler
             const button = document.getElementById('openAppButton');
             button.href = deepLink;
+            
+            // Add click handler to ensure it works
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('🔘 Button clicked! Opening app...');
+                console.log('🔗 Deep link URL:', deepLink);
+                
+                // Try multiple methods to open the app
+                window.location.href = deepLink;
+                
+                // Also try iframe method
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = deepLink;
+                document.body.appendChild(iframe);
+                
+                return false;
+            });
             
             // Try to auto-open the app after 1 second
             setTimeout(() => {
                 console.log('🚀 Attempting to open app...');
+                console.log('🔗 Deep link URL:', deepLink);
+                
+                // Try multiple methods to open the app
+                // Method 1: Direct window.location
                 window.location.href = deepLink;
+                
+                // Method 2: Create hidden iframe (for iOS Safari)
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = deepLink;
+                document.body.appendChild(iframe);
+                
+                // Method 3: Try window.open as fallback
+                setTimeout(() => {
+                    window.open(deepLink, '_self');
+                }, 500);
             }, 1000);
         }
         
