@@ -67,6 +67,7 @@
         <h1>Email Verified!</h1>
         <p id="message">Redirecting to YachtieAssist app...</p>
         <div class="spinner" id="spinner"></div>
+        <a id="openAppButton" href="#" style="display: none; margin-top: 30px; padding: 15px 40px; background: #FFD700; color: #1a1a2e; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px;">Open YachtieAssist</a>
         <p id="error" class="error" style="display: none;"></p>
     </div>
 
@@ -134,14 +135,24 @@
                 document.getElementById('message').textContent = 'Opening YachtieAssist...';
                 document.getElementById('message').classList.add('success');
                 
-                // Try to redirect
-                window.location.href = deepLink;
+                // Try multiple methods to open the app
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = deepLink;
+                document.body.appendChild(iframe);
                 
-                // Show fallback message after 3 seconds
+                setTimeout(() => {
+                    window.location.href = deepLink;
+                }, 100);
+                
+                // Show manual button after 2 seconds
                 setTimeout(() => {
                     document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + deepLink + '">tap here to open YachtieAssist</a>';
-                }, 3000);
+                    document.getElementById('message').textContent = 'Tap the button below to open YachtieAssist';
+                    const button = document.getElementById('openAppButton');
+                    button.href = deepLink;
+                    button.style.display = 'inline-block';
+                }, 2000);
                 
                 return;
             }
@@ -168,13 +179,26 @@
                 document.getElementById('message').textContent = 'Opening YachtieAssist...';
                 document.getElementById('message').classList.add('success');
                 
-                window.location.href = deepLinkWithToken;
+                // Try multiple methods to open the app
+                // Method 1: Create hidden iframe (works better on iOS Safari)
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = deepLinkWithToken;
+                document.body.appendChild(iframe);
                 
-                // Show fallback message after 3 seconds
+                // Method 2: Try window.location after a small delay
+                setTimeout(() => {
+                    window.location.href = deepLinkWithToken;
+                }, 100);
+                
+                // Method 3: Show manual button after 2 seconds
                 setTimeout(() => {
                     document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + deepLinkWithToken + '">tap here to open YachtieAssist</a>';
-                }, 3000);
+                    document.getElementById('message').textContent = 'Tap the button below to open YachtieAssist';
+                    const button = document.getElementById('openAppButton');
+                    button.href = deepLinkWithToken;
+                    button.style.display = 'inline-block';
+                }, 2000);
                 
                 return;
             }
@@ -189,13 +213,24 @@
             document.getElementById('message').textContent = 'Opening YachtieAssist...';
             document.getElementById('message').classList.add('success');
             
-            window.location.href = simpleDeepLink;
+            // Try multiple methods to open the app
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = simpleDeepLink;
+            document.body.appendChild(iframe);
             
-            // Show fallback message after 3 seconds
+            setTimeout(() => {
+                window.location.href = simpleDeepLink;
+            }, 100);
+            
+            // Show manual button after 2 seconds
             setTimeout(() => {
                 document.getElementById('spinner').style.display = 'none';
-                document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + simpleDeepLink + '">tap here to open YachtieAssist</a>';
-            }, 3000);
+                document.getElementById('message').textContent = 'Tap the button below to open YachtieAssist';
+                const button = document.getElementById('openAppButton');
+                button.href = simpleDeepLink;
+                button.style.display = 'inline-block';
+            }, 2000);
         }
         
         // Run redirect on page load
