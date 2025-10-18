@@ -65,9 +65,9 @@
     <div class="container">
         <div class="logo">⚓</div>
         <h1>Email Verified!</h1>
-        <p id="message">Redirecting to YachtieAssist app...</p>
-        <div class="spinner" id="spinner"></div>
-        <a id="openAppButton" href="#" style="display: none; margin-top: 30px; padding: 15px 40px; background: #FFD700; color: #1a1a2e; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px;">Open YachtieAssist</a>
+        <p id="message">Email verified! Tap the button below to open YachtieAssist.</p>
+        <div class="spinner" id="spinner" style="display: none;"></div>
+        <a id="openAppButton" href="#" style="margin-top: 30px; padding: 15px 40px; background: #FFD700; color: #1a1a2e; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px;">Open YachtieAssist</a>
         <p id="error" class="error" style="display: none;"></p>
     </div>
 
@@ -233,15 +233,66 @@
             }, 2000);
         }
         
-        // Run redirect on page load
+        // Simple function to set up the button
+        function setupButton() {
+            const params = getUrlParams();
+            console.log('📦 All extracted params:', Object.keys(params));
+            
+            const accessToken = params.access_token;
+            const refreshToken = params.refresh_token;
+            const tokenHash = params.token_hash;
+            const token = params.token;
+            const type = params.type;
+            const errorParam = params.error;
+            const errorDescription = params.error_description;
+            
+            // If there's an error, show it
+            if (errorParam) {
+                console.error('❌ Error from Supabase:', errorParam, errorDescription);
+                document.getElementById('message').textContent = 'Verification failed';
+                document.getElementById('error').textContent = errorDescription || errorParam;
+                document.getElementById('error').style.display = 'block';
+                return;
+            }
+            
+            let deepLink = 'yachtieassist://auth/callback';
+            
+            // If we have access_token and refresh_token, use them
+            if (accessToken && refreshToken) {
+                console.log('✅ Found tokens in URL');
+                deepLink = `yachtieassist://auth/callback#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&type=${type || 'signup'}`;
+            }
+            // If we have verification token, use it
+            else if (tokenHash || token) {
+                console.log('✅ Found verification token');
+                const verificationToken = tokenHash || token;
+                deepLink = `yachtieassist://auth/callback?token_hash=${encodeURIComponent(verificationToken)}&type=${type || 'signup'}`;
+            }
+            else {
+                console.log('⚠️ No tokens found - using simple deep link');
+            }
+            
+            console.log('🔗 Deep link:', deepLink);
+            
+            // Set the button URL
+            const button = document.getElementById('openAppButton');
+            button.href = deepLink;
+            
+            // Try to auto-open the app after 1 second
+            setTimeout(() => {
+                console.log('🚀 Attempting to open app...');
+                window.location.href = deepLink;
+            }, 1000);
+        }
+        
+        // Set up the button immediately
         try {
-            redirectToApp();
+            setupButton();
         } catch (error) {
-            console.error('❌ Error during redirect:', error);
+            console.error('❌ Error setting up button:', error);
             document.getElementById('message').textContent = 'Verification failed';
             document.getElementById('error').textContent = 'An error occurred. Please try again.';
             document.getElementById('error').style.display = 'block';
-            document.getElementById('spinner').style.display = 'none';
         }
     </script>
 </body>
