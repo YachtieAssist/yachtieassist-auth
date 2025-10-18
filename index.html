@@ -73,8 +73,10 @@
     <script>
         console.log('🔗 Redirect page loaded');
         console.log('🔗 Current URL:', window.location.href);
+        console.log('🔗 Hash:', window.location.hash);
+        console.log('🔗 Search:', window.location.search);
         
-        // Function to get URL parameters
+        // Function to get URL parameters from both hash and query string
         function getUrlParams() {
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const queryParams = new URLSearchParams(window.location.search);
@@ -82,15 +84,17 @@
             // Combine both hash and query parameters
             const params = {};
             
-            // Check hash first (Supabase usually puts tokens here)
+            // Check hash first (Supabase auth tokens are usually here)
             for (const [key, value] of hashParams) {
                 params[key] = value;
+                console.log('  Hash param:', key, '=', value.substring(0, 20) + '...');
             }
             
             // Then check query string
             for (const [key, value] of queryParams) {
                 if (!params[key]) {
                     params[key] = value;
+                    console.log('  Query param:', key, '=', value);
                 }
             }
             
@@ -98,10 +102,10 @@
         }
         
         // Function to redirect to app
-        function redirectToApp() {
+        async function redirectToApp() {
             const params = getUrlParams();
             
-            console.log('📦 Extracted params:', params);
+            console.log('📦 All extracted params:', Object.keys(params));
             
             const accessToken = params.access_token;
             const refreshToken = params.refresh_token;
@@ -119,13 +123,13 @@
                 return;
             }
             
-            // If we have tokens, redirect to app with them
+            // If we have tokens in the URL, redirect to app immediately
             if (accessToken && refreshToken) {
-                console.log('✅ Found tokens, redirecting to app...');
+                console.log('✅ Found tokens in URL, redirecting to app...');
                 
-                const deepLink = `yachtieassist://auth/callback#access_token=${accessToken}&refresh_token=${refreshToken}&type=${type || 'signup'}`;
+                const deepLink = `yachtieassist://auth/callback#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&type=${type || 'signup'}`;
                 
-                console.log('🚀 Redirecting to:', deepLink.substring(0, 50) + '...');
+                console.log('🚀 Redirecting to app with tokens...');
                 
                 document.getElementById('message').textContent = 'Opening YachtieAssist...';
                 document.getElementById('message').classList.add('success');
@@ -138,16 +142,33 @@
                     document.getElementById('spinner').style.display = 'none';
                     document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + deepLink + '">tap here to open YachtieAssist</a>';
                 }, 3000);
-            } else {
-                // No tokens found - this is the problem!
-                console.error('❌ No access_token or refresh_token found in URL');
-                console.log('📋 Available params:', Object.keys(params));
                 
-                document.getElementById('message').textContent = 'Verification in progress...';
-                document.getElementById('error').textContent = 'No authentication tokens received. Please try signing up again.';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('spinner').style.display = 'none';
+                return;
             }
+            
+            // If we don't have tokens but we're here from Supabase verification,
+            // it means the email was verified but tokens weren't included.
+            // This happens when coming from /auth/v1/verify redirect.
+            // In this case, we just open the app and let it check for an existing session.
+            console.log('⚠️ No tokens in URL - this means Supabase verified the email');
+            console.log('⚠️ Opening app to check for existing session...');
+            
+            // Just open the app with a simple deep link
+            // The app's AppState listener will detect the session
+            const simpleDeepLink = 'yachtieassist://auth/callback';
+            
+            console.log('🚀 Opening app without tokens (app will check session)...');
+            
+            document.getElementById('message').textContent = 'Opening YachtieAssist...';
+            document.getElementById('message').classList.add('success');
+            
+            window.location.href = simpleDeepLink;
+            
+            // Show fallback message after 3 seconds
+            setTimeout(() => {
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('message').innerHTML = 'If the app didn\'t open automatically,<br><a href="' + simpleDeepLink + '">tap here to open YachtieAssist</a>';
+            }, 3000);
         }
         
         // Run redirect on page load
@@ -163,3 +184,4 @@
     </script>
 </body>
 </html>
+
